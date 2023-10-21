@@ -40,5 +40,5 @@ clean:
 
 clean_comp:
 	rm -rf build/
-	rm -rf dgsparse.egg-info/
+	rm -rf dgsparse_lib.egg-info/
 	rm -rf dist/

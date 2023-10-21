@@ -12,6 +12,10 @@ class Storage(object):
     _csr2csc: torch.Tensor
     _csc2csr: torch.Tensor
     _colcount: Optional[torch.Tensor]
+    _group_rowptr: Optional[torch.Tensor]
+    _group_row: Optional[torch.Tensor]
+    _group_colptr: Optional[torch.Tensor]
+    _group_col: Optional[torch.Tensor]
 
     def __init__(
         self,
@@ -23,6 +27,10 @@ class Storage(object):
         csr2csc: Optional[torch.Tensor] = None,
         csc2csr: Optional[torch.Tensor] = None,
         colcount: Optional[torch.Tensor] = None,
+        group_rowptr: Optional[torch.Tensor] = None,
+        group_row: Optional[torch.Tensor] = None,
+        group_colptr: Optional[torch.Tensor] = None,
+        group_col: Optional[torch.Tensor] = None,
     ):
         assert row is not None or rowptr is not None
         assert col is not None
@@ -95,6 +103,10 @@ class Storage(object):
         self._colptr = colptr
         self._csr2csc = csr2csc
         self._colcount = colcount
+        self._group_rowptr = group_rowptr
+        self._group_row = group_row
+        self._group_colptr = group_colptr
+        self._group_col = group_col
 
     @classmethod
     def empty(self):
@@ -109,9 +121,12 @@ class Storage(object):
             csc2csr=None,
             csr2csc=None,
             colcount=None,
+            group_rowptr=None,
+            group_row=None,
+            group_colptr=None,
+            group_col=None,
         )
 
-    # def row(self) -> torch.Tensor:
     #     row = self._row
     #     if row is not None:
     #         return row
@@ -215,3 +230,55 @@ class Storage(object):
             self._colptr = colptr
         self._csr2csc = csr2csc
         return csr2csc
+
+    def to_group_tensor(self, group_size):
+        assert self._rowptr is not None
+        # if self._group_rowptr is None or self._group_row is None
+        # or self._group_colptr is None or self._group_col is None:
+        if self._colptr is None:
+            colptr, _, _ = torch.ops.dgsparse_spmm.csr2csc(
+                self._rowptr, self._col, self._values)
+            self._colptr = colptr
+
+        group_rowptr = []
+        group_row = []
+
+        for rid in range(self._rowptr.numel() - 1):
+            high = self._rowptr[rid + 1]
+            tmp_rowptr = self._rowptr[rid].item()
+            while tmp_rowptr < high:
+                group_rowptr.append(tmp_rowptr)
+                tmp_rowptr += group_size
+                group_row.append(rid)
+        if group_rowptr[-1] != self._rowptr[-1]:
+            group_rowptr.append(self._rowptr[-1].item())
+
+        group_colptr = []
+        group_col = []
+        for rid in range(self._colptr.numel() - 1):
+            high = self._colptr[rid + 1]
+            tmp_colptr = self._colptr[rid].item()
+            while tmp_colptr < high:
+                group_colptr.append(tmp_colptr)
+                tmp_colptr += group_size
+                group_col.append(rid)
+        if group_colptr[-1] != self._colptr[-1]:
+            group_colptr.append(self._colptr[-1].item())
+
+        self._group_rowptr = torch.tensor(group_rowptr,
+                                          dtype=torch.int,
+                                          device=self._col.device,
+                                          requires_grad=False)
+        self._group_row = torch.tensor(group_row,
+                                       dtype=torch.int,
+                                       device=self._col.device,
+                                       requires_grad=False)
+
+        self._group_colptr = torch.tensor(group_colptr,
+                                          dtype=torch.int,
+                                          device=self._col.device,
+                                          requires_grad=False)
+        self._group_col = torch.tensor(group_col,
+                                       dtype=torch.int,
+                                       device=self._col.device,
+                                       requires_grad=False)

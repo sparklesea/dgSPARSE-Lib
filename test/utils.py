@@ -34,13 +34,13 @@ class GraphDataset:
             dataset = datasets.Planetoid(root='./data/', name='Cora')
             graph = dataset[0]
         elif self.name == 'ppi':
-            dataset = datasets.PPI(root='./data/')
+            dataset = datasets.PPI(root='./data/Ppi')
             graph = dataset[0]
         elif self.name == 'reddit':
             dataset = datasets.Reddit(root='./data/Reddit')
             graph = dataset[0]
         elif self.name == 'github':
-            dataset = datasets.GitHub(root='./data/')
+            dataset = datasets.GitHub(root='./data')
             graph = dataset[0]
         else:
             raise KeyError('Unknown dataset {}.'.format(self.name))

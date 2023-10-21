@@ -41,6 +41,29 @@ class SparseTensor(object):
             # is_sorted=True,
         )
 
+    @classmethod
+    def from_torch_sparse_csr_tensor_with_group(self,
+                                                mat: torch.Tensor,
+                                                has_value: bool = True,
+                                                requires_grad: bool = False,
+                                                group_size=8):
+        if has_value:
+            values = mat.values()
+            if requires_grad:
+                values.requires_grad_()
+        else:
+            values = None
+        sparse_tensor = SparseTensor(
+            row=None,
+            rowptr=mat.crow_indices(),
+            col=mat.col_indices(),
+            values=values,
+            has_value=has_value,
+            # is_sorted=True,
+        )
+        sparse_tensor.storage.to_group_tensor(group_size)
+        return sparse_tensor
+
     # @classmethod
     # def from_edge_index(
     #     self, edge_index: torch.Tensor, edge_attr:

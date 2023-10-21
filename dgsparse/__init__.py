@@ -6,6 +6,7 @@ import dgsparse.spmm
 import dgsparse.tensor
 import dgsparse.storage
 from .spmm import spmm_max, spmm_mean, spmm_sum, spmm_min
+from .spmm_group import spmm_sum_group
 from .tensor import SparseTensor
 from .storage import Storage
 from .ftransform import csr2csc
@@ -13,7 +14,7 @@ from . import nn  # noqa
 
 __version__ = '0.1'
 
-for library in ['_spconv', '_spmm']:
+for library in ['_spconv', '_spmm', '_spmm_group']:
     cuda_spec = importlib.machinery.PathFinder().find_spec(
         f'{library}_cuda', [osp.dirname(__file__)])
     # cpu_spec = importlib.machinery.PathFinder().find_spec(
@@ -44,6 +45,6 @@ if torch.version.cuda is not None and cuda_version != -1:  # pragma: no cover
 # from .tensor import SparseTensor
 
 __all__ = [
-    'spmm_sum', 'spmm_max', 'spmm_min', 'spmm_mean', 'Storage', 'SparseTensor',
-    'csr2csc'
+    'spmm_sum', 'spmm_max', 'spmm_min', 'spmm_mean', 'spmm_sum_group',
+    'Storage', 'SparseTensor', 'csr2csc'
 ]
