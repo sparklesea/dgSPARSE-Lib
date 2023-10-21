@@ -14,7 +14,7 @@ from . import nn  # noqa
 
 __version__ = '0.1'
 
-for library in ['_spconv', '_spmm', '_spmm_group']:
+for library in ['_spmm', '_spmm_group']:  # ignore spconv
     cuda_spec = importlib.machinery.PathFinder().find_spec(
         f'{library}_cuda', [osp.dirname(__file__)])
     # cpu_spec = importlib.machinery.PathFinder().find_spec(
