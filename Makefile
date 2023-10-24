@@ -39,6 +39,6 @@ clean:
 	$(RM) -rf $(TARGET) $(OBJ_DIR)
 
 clean_comp:
-	rm -rf build/
-	rm -rf dgsparse_lib.egg-info/
-	rm -rf dist/
+	${RM} build/
+	${RM} -rf dgsparse_lib.egg-info/
+	${RM} -rf dist/
